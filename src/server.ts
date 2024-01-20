@@ -15,6 +15,12 @@ app.use(
     credentials: true,
   })
 );
+
+// Simple GET route
+app.get("/", (req, res) => {
+  res.send("Hello, Server!");
+});
+
 const serverApp = http.createServer(app);
 const io = new Server(serverApp, {
   cors: {
@@ -25,8 +31,9 @@ const io = new Server(serverApp, {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-serverApp.listen(3001, () => {
-  console.log("Server Running !");
+const PORT = process.env.PORT || 80;
+serverApp.listen(PORT, () => {
+  console.log(`Server Running on port ${PORT}!`);
 });
 
 const renterNameSpace = io.of("/renter");
