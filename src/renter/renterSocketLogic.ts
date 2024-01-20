@@ -5,7 +5,6 @@ let connectedRenters: any[] = [];
 const renterNameSpaceLogic = (renterNameSpace: any) => {
   renterNameSpace.on("connection", (socket: any) => {
     socket.on("newRenterConnected", (data: any) => {
-      console.log(data);
       const renterExists = connectedRenters.some(
         (renter) => renter.renterMail === data.renterMail
       );
@@ -28,8 +27,6 @@ const renterNameSpaceLogic = (renterNameSpace: any) => {
     });
     //
     socket.on("renterDisconnected", (data: any) => {
-      console.log(data);
-
       connectedRenters = connectedRenters.filter(
         (renter) => renter.renterMail !== data.renterMail
       );
