@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 import renterNameSpaceLogic from "../src/renter/renterSocketLogic";
+import landlordNameSpaceLogic from "../src/landlord/landlordSocketLogic";
 
 dotenv.config();
 const app = express();
@@ -37,5 +38,8 @@ serverApp.listen(PORT, () => {
 });
 
 const renterNameSpace = io.of("/renter");
+const landlordNameSpace = io.of("/landlord");
 renterNameSpaceLogic(renterNameSpace);
-export { renterNameSpace };
+landlordNameSpaceLogic(landlordNameSpace);
+
+export { renterNameSpace, landlordNameSpace };

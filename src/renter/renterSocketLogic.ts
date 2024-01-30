@@ -1,43 +1,44 @@
 import axios from "axios";
 
-let connectedRenters: any[] = [];
+let connectedRenters: Record<string, any> = {}; // Use a dictionary for O(1) lookup
 
 const renterNameSpaceLogic = (renterNameSpace: any) => {
   renterNameSpace.on("connection", (socket: any) => {
     socket.on("newRenterConnected", (data: any) => {
-      const renterExists = connectedRenters.some(
-        (renter) => renter.renterMail === data.renterMail
-      );
-      if (!renterExists) {
-        connectedRenters.push({ renterMail: data.renterMail });
+      if (!connectedRenters[data.renterId]) {
+        connectedRenters[data.renterId] = {
+          socketId: socket.id,
+          renterMail: data.renterMail,
+        };
         renterNameSpace.emit(
           "connectedRentersCountUpdate",
-          connectedRenters.length
+          Object.keys(connectedRenters).length
         );
       } else {
         renterNameSpace.emit(
           "connectedRentersCountUpdate",
-          connectedRenters.length
+          Object.keys(connectedRenters).length
         );
       }
     });
-    //
-    socket.on("testing", () => {
-      renterNameSpace.emit("testRenter");
+
+    socket.on("testing", async () => {
+      console.log("hello");
     });
-    //
+
     socket.on("renterDisconnected", (data: any) => {
-      connectedRenters = connectedRenters.filter(
-        (renter) => renter.renterMail !== data.renterMail
-      );
-      renterNameSpace.emit(
-        "connectedRentersCountUpdate",
-        connectedRenters.length
-      );
+      if (connectedRenters[data.renterId]) {
+        delete connectedRenters[data.renterId];
+        renterNameSpace.emit(
+          "connectedRentersCountUpdate",
+          Object.keys(connectedRenters).length
+        );
+      }
     });
   });
 
   renterNameSpace.on("disconnect", (socket: any) => {
+    // You can handle disconnect logic here if needed
     console.log("working AAAAAAAAAAAAAA");
   });
 };
