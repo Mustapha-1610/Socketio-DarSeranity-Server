@@ -6,12 +6,9 @@ const renterNameSpaceLogic = (renterNameSpace: any) => {
   renterNameSpace.on("connection", (socket: any) => {
     // function to add new connected renters to an array and save their socket id
     socket.on("newRenterConnected", (data: any) => {
-      console.log(data);
-      if (!connectedRenters[data.renterSocketId]) {
-        connectedRenters[data.renterSocketId] = {
-          socketId: socket.id,
-        };
-      }
+      connectedRenters[data.renterSocketId] = {
+        socketId: socket.id,
+      };
     });
     // Function To Refresh notifications on the front side
     socket.on("refreshRenterNotifications", (data: any) => {

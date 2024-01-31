@@ -5,12 +5,10 @@ let connectedLandlords: Record<string, any> = {}; // Use a dictionary for O(1) l
 const landlordNameSpaceLogic = (landlordNameSpace: any) => {
   landlordNameSpace.on("connection", (socket: any) => {
     socket.on("newLandlordConnected", (data: any) => {
-      if (!connectedLandlords[data.landlordSocketId]) {
-        connectedLandlords[data.landlordSocketId] = {
-          socketId: socket.id,
-          landlordMail: data.landlordMail,
-        };
-      }
+      connectedLandlords[data.landlordSocketId] = {
+        socketId: socket.id,
+        landlordMail: data.landlordMail,
+      };
     });
     //
     socket.on("refLanNotis", (data: any) => {
