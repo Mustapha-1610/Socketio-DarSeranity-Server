@@ -4,8 +4,6 @@ import { io } from "socket.io-client";
 
 let connectedRenters: Record<string, any> = {};
 // Use a dictionary for O(1) lookup
-const landlordSocket = io(`${process.env.SOCKET_SERVER}/landlord`);
-
 const renterNameSpaceLogic = (renterNameSpace: any) => {
   renterNameSpace.on("connection", (socket: any) => {
     // function to add new connected renters to an array and save their socket id
@@ -38,7 +36,9 @@ const renterNameSpaceLogic = (renterNameSpace: any) => {
             }
             const landlordSocketObject: any =
               data.socketObject.socketData.landlordSocketData;
-            landlordSocket.emit("refLanNotis", { landlordSocketObject });
+            const landlordSocket = io(`${process.env.SOCKET_SERVER}/landlord`);
+
+            landlordSocket.emit("refLanNotis", landlordSocketObject);
           })
           .catch((error) => {
             console.error("Error:", error.message);

@@ -12,9 +12,7 @@ const landlordNameSpaceLogic = (landlordNameSpace: any) => {
     });
     //
     socket.on("refLanNotis", (data: any) => {
-      const landlord =
-        connectedLandlords[data.data.landlordSocketId] ||
-        connectedLandlords[data];
+      const landlord = connectedLandlords[data];
       if (landlord && landlord.socketId) {
         socket.to(landlord.socketId).emit("refreshData", "hello");
       }
