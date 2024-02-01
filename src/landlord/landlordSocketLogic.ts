@@ -12,17 +12,14 @@ const landlordNameSpaceLogic = (landlordNameSpace: any) => {
     });
     //
     socket.on("refLanNotis", (data: any) => {
-      const landlord = connectedLandlords[data.data.landlordSocketId];
+      const landlord =
+        connectedLandlords[data.data.landlordSocketId] ||
+        connectedLandlords[data];
       if (landlord && landlord.socketId) {
         socket.to(landlord.socketId).emit("refreshData", "hello");
       }
     });
     //
-    socket.on("testing", async () => {
-      console.log("hello landlord");
-    });
-    //
-
     socket.on("renterDisconnected", (data: any) => {
       if (connectedLandlords[data.landlordSocketId]) {
         delete connectedLandlords[data.landlordSocketId];

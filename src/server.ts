@@ -3,6 +3,7 @@ import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
+import cookieParser from "cookie-parser";
 import renterNameSpaceLogic from "../src/renter/renterSocketLogic";
 import landlordNameSpaceLogic from "../src/landlord/landlordSocketLogic";
 
@@ -31,6 +32,7 @@ const io = new Server(serverApp, {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const PORT = process.env.PORT || 80;
 serverApp.listen(PORT, () => {
@@ -39,6 +41,7 @@ serverApp.listen(PORT, () => {
 
 const renterNameSpace = io.of("/renter");
 const landlordNameSpace = io.of("/landlord");
+
 renterNameSpaceLogic(renterNameSpace);
 landlordNameSpaceLogic(landlordNameSpace);
 
