@@ -3,22 +3,60 @@ import nodeSchedule from "node-schedule";
 import { io } from "socket.io-client";
 
 let connectedRenters: Record<string, any> = {};
-// Use a dictionary for O(1) lookup
+const rentDueReminder = new Map();
 const renterNameSpaceLogic = (renterNameSpace: any) => {
   renterNameSpace.on("connection", (socket: any) => {
-    // function to add new connected renters to an array and save their socket id
     socket.on("newRenterConnected", async (data: any) => {
       connectedRenters[data.renterSocketId] = {
         socketId: socket.id,
       };
     });
     //
+    socket.on("sendMonthlyReminderMails", (data: any) => {
+      console.log(data);
+      const newDate = new Date(data.paymentDate);
+      newDate.setDate(newDate.getDate() - 3);
+      newDate.setHours(8, 0, 0, 0);
+      const job = nodeSchedule.scheduleJob(
+        "*/2 * * * *",
+        /*{ start: data.paymentDate, rule: "0 8 * * *" }*/ async function () {
+          axios
+            .post(
+              `${process.env.API_BASE_URL}/api/general/sendPaymentReminderMail`,
+              {
+                paymentDate: data.paymentDate,
+                propertyTitle: data.propertyTitle,
+                landlordId: data.landlordInformations.landlordId,
+                renterId: data.renterId,
+              }
+            )
+            .then((response: any) => {
+              console.log(response);
+              const renter =
+                connectedRenters[response.data.socketData.renterSocketId];
+              if (renter && renter.socketId) {
+                socket.to(renter.socketId).emit("refreshData", "hello");
+              }
+              const landlordSocketObject: any =
+                response.data.socketData.landlordSocketId;
+              const landlordSocket = io(
+                `${process.env.SOCKET_SERVER}/landlord`
+              );
+
+              landlordSocket.emit("refLanNotis", landlordSocketObject);
+            })
+            .catch((error) => {
+              console.error("Error:", error.message);
+            });
+        }
+      );
+      rentDueReminder.set(data.scheduledEventId, job);
+    });
+    //
     socket.on("remindViewing", (data: any) => {
-      // Get the current local date and time
       const currentDate = new Date();
-      // Add 5 minutes to the current date
-      const mailingDate = new Date(currentDate.getTime() + 1 * 60 * 1000);
-      const scheduledDate = new Date(currentDate.getTime() + 2 * 60 * 1000);
+      const mailingDate = new Date(currentDate.getTime() + 30 * 1000);
+      const scheduledDate = new Date(currentDate.getTime() + 60 * 1000);
 
       nodeSchedule.scheduleJob(mailingDate, async function () {
         axios
@@ -46,10 +84,13 @@ const renterNameSpaceLogic = (renterNameSpace: any) => {
       });
       nodeSchedule.scheduleJob(scheduledDate, async function () {
         axios
-          .post("http://localhost:3000/api/propertyListing/confirmViewing", {
-            renterId: data.socketObject.renterData.renterId,
-            rentalPropertyId: data.socketObject.propertyData.propertyId,
-          })
+          .post(
+            `${process.env.API_BASE_URL}/api/propertyListing/confirmViewing`,
+            {
+              renterId: data.socketObject.renterData.renterId,
+              rentalPropertyId: data.socketObject.propertyData.propertyId,
+            }
+          )
           .then((response) => {
             console.log("Response:", response.data);
           })
@@ -57,6 +98,18 @@ const renterNameSpaceLogic = (renterNameSpace: any) => {
             console.error("Error:", error.message);
           });
       });
+    });
+    //
+    socket.on("cancelRentReminder", (data: any) => {
+      console.log(data);
+      const job = rentDueReminder.get(data);
+      if (job) {
+        job.cancel();
+        rentDueReminder.delete(data);
+        console.log(`Cancelled event with ID ${data}`);
+      } else {
+        console.log(`No event found with ID ${data}`);
+      }
     });
     // Function To Refresh notifications on the front side
     socket.on("refreshRenterNotifications", (data: any) => {

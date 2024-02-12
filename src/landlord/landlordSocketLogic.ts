@@ -1,7 +1,7 @@
 import axios from "axios";
 
 let connectedLandlords: Record<string, any> = {}; // Use a dictionary for O(1) lookup
-
+const rentDueReminder = new Map();
 const landlordNameSpaceLogic = (landlordNameSpace: any) => {
   landlordNameSpace.on("connection", (socket: any) => {
     socket.on("newLandlordConnected", (data: any) => {
